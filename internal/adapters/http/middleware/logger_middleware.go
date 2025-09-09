@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-module/carbon/v2"
+	"github.com/nNottp33/ohara-api/pkg/utils"
 )
 
 func LoggerMiddleware(c *fiber.Ctx) error {
@@ -23,7 +24,7 @@ func LoggerMiddleware(c *fiber.Ctx) error {
 		c.IP(),
 		c.Method(),
 		c.Path(),
-		c.Get("User-Agent"),
+		utils.ExtractBrowserUA(c.Get("User-Agent")),
 	)
 
 	return err
