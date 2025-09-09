@@ -6,12 +6,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/nNottp33/ohara-api/internal/adapters/http/middleware"
-	"github.com/nNottp33/ohara-api/internal/config"
+	"github.com/nNottp33/ohara-api/internal/config/env"
 )
 
 func main() {
 	app := fiber.New()
-	appConfig := config.Get[config.AppConfig]("App")
+	appConfig := env.Get[env.AppConfig]("App")
 
 	app.Use(middleware.LoggerMiddleware)
 
