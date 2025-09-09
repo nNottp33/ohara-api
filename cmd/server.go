@@ -11,11 +11,11 @@ import (
 
 func main() {
 	app := fiber.New()
-	appConfig := env.Get[env.AppConfig]("App")
+	appEnv := env.Get[env.AppConfig]("App")
 
 	app.Use(middleware.LoggerMiddleware)
 
-	isProd := appConfig.AppEnv == "production"
+	isProd := appEnv.AppEnv == "production"
 	origins := map[bool]string{
 		true:  "http://localhost:3033",
 		false: "*",
@@ -50,7 +50,7 @@ func main() {
 		},
 	)
 
-	err := app.Listen(":" + appConfig.AppPort)
+	err := app.Listen(":" + appEnv.AppPort)
 	if err != nil {
 		panic(err)
 	}
