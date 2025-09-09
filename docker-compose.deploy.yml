@@ -1,0 +1,9 @@
+services:
+  app:
+    container_name: ohara-api
+    image: ${DOCKER_REGISTRY}:${IMAGE_TAG}
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - '${APP_PORT}:${APP_PORT}'

@@ -1,0 +1,24 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    container_name: ohara-api
+    image: ohara-api:latest
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - '${APP_PORT}:${APP_PORT}'
+    networks:
+      - ohara
+    volumes:
+      - .:/app:Z
+
+volumes:
+  mongo_data:
+
+networks:
+  ohara:
+    external: true
+    name: ohara
