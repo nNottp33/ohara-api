@@ -3,6 +3,7 @@ package main
 import (
 	"strings"
 
+	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/nNottp33/ohara-api/internal/adapters/http/middleware"
@@ -36,6 +37,17 @@ func main() {
 						fiber.MethodPatch,
 					}, ",",
 				),
+			},
+		),
+	)
+
+	app.Use(
+		swagger.New(
+			swagger.Config{
+				BasePath: "/",
+				FilePath: "./docs/swagger.json",
+				Path:     "swagger",
+				Title:    "Swagger API Docs",
 			},
 		),
 	)
