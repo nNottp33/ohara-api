@@ -1,5 +1,7 @@
 SHELL := /bin/bash
 CONTAINER ?= app
+MAIN_FILE=./cmd/server.go
+DOCS_DIR=./docs
 
 run:
 	source .env && air -c .air.toml
@@ -21,3 +23,10 @@ prune:
 
 clean:
 	rm -rf tmp/
+
+swag:
+	@command -v swag >/dev/null 2>&1 || { \
+		echo "swag not found, installing..."; \
+		go install github.com/swaggo/swag/cmd/swag@latest; \
+	}
+	swag init -g $(MAIN_FILE) -o $(DOCS_DIR)
