@@ -41,16 +41,18 @@ func main() {
 		),
 	)
 
-	app.Use(
-		swagger.New(
-			swagger.Config{
-				BasePath: "/",
-				FilePath: "./docs/swagger.json",
-				Path:     "swagger",
-				Title:    "Swagger API Docs",
-			},
-		),
-	)
+	if !isProd {
+		app.Use(
+			swagger.New(
+				swagger.Config{
+					BasePath: "/",
+					FilePath: "./docs/swagger.json",
+					Path:     "swagger",
+					Title:    "Swagger API Docs",
+				},
+			),
+		)
+	}
 
 	app.Get(
 		"/", func(c *fiber.Ctx) error {
