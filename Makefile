@@ -26,7 +26,6 @@ clean:
 
 swag:
 	@command -v swag >/dev/null 2>&1 || { \
-		echo "swag not found, installing..."; \
 		go install github.com/swaggo/swag/cmd/swag@latest; \
 	}
 	swag init -g $(MAIN_FILE) -o $(DOCS_DIR)
