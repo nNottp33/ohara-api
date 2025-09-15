@@ -12,15 +12,14 @@ import (
 func LoggerMiddleware(c *fiber.Ctx) error {
 	start := time.Now()
 	err := c.Next()
-	latency := time.Since(start)
-
-	now := carbon.Now().ToDateTimeString()
+	latency := float64(time.Since(start)) / float64(time.Millisecond)
 
 	fmt.Printf(
-		"%s | %d | %.3f ms | %s | %s | %s | %s\n",
-		now,
+		"%s | %s | %d | %.2f ms | %s | %s | %s | %s\n",
+		carbon.Now().ToDateTimeString(),
+		c.Locals("requestid"),
 		c.Response().StatusCode(),
-		float64(latency)/float64(time.Millisecond),
+		latency,
 		c.IP(),
 		c.Method(),
 		c.Path(),

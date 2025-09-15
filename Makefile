@@ -10,16 +10,16 @@ build:
 	go build -o ./tmp/main ./cmd/server.go
 
 up:
-	podman-compose --env-file .env up --build -d
+	docker compose --env-file .env up --build -d
 
 down:
-	podman-compose --env-file .env down
+	docker compose --env-file .env down
 
 logs:
-	podman-compose logs -f $(CONTAINER)
+	docker compose logs -f $(CONTAINER)
 
 prune:
-	podman system prune -af --volumes
+	docker system prune -af --volumes
 
 clean:
 	rm -rf tmp/

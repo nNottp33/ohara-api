@@ -8,8 +8,9 @@ import (
 )
 
 type AppConfig struct {
-	AppEnv  string
-	AppPort string
+	AppEnv          string
+	AppPort         string
+	PrefixRequestId string
 }
 
 type DBConfig struct {
@@ -39,8 +40,9 @@ func init() {
 	}
 
 	store["App"] = &AppConfig{
-		AppEnv:  getOrDefault("APP_ENV", "local"),
-		AppPort: getOrDefault("APP_PORT", "3033"),
+		AppEnv:          getOrDefault("APP_ENV", "local"),
+		AppPort:         getOrDefault("APP_PORT", "3033"),
+		PrefixRequestId: getOrDefault("PREFIX_REQUEST_ID", "requestId"),
 	}
 
 	store["Db"] = &DBConfig{
