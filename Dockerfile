@@ -1,6 +1,6 @@
 FROM golang:1.25-alpine AS builder
 
-RUN apk add --no-cache make bash
+RUN apk add --no-cache bash
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ COPY . .
 
 RUN go mod tidy && go mod download
 
-RUN make build
+RUN go build -o ./tmp/main ./cmd/server.go
 
 FROM alpine:3.14 AS runner
 
@@ -18,6 +18,6 @@ ENV TZ="Asia/Bangkok"
 
 WORKDIR /app
 
-COPY --from=builder /bin/app .
+COPY --from=builder /app/tmp/main .
 
-ENTRYPOINT ["./app"]
+ENTRYPOINT ["./main"]

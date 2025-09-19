@@ -13,7 +13,7 @@ services:
     networks:
       - ohara
     volumes:
-      - .:/app:Z
+      - .:/app
 
 volumes:
   mongo_data:
