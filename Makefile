@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-CONTAINER ?= app
+SERVICE ?= app
 MAIN_FILE=./cmd/server.go
 DOCS_DIR=./docs
 
@@ -12,11 +12,14 @@ build:
 up:
 	docker compose --env-file .env up --build -d
 
+restart:
+	docker compose restart $(SERVICE)
+
 down:
 	docker compose --env-file .env down
 
 logs:
-	docker compose logs -f $(CONTAINER)
+	docker compose logs -f $(SERVICE)
 
 prune:
 	docker system prune -af --volumes
