@@ -1,6 +1,7 @@
 FROM golang:1.25-alpine
 
-RUN go install github.com/air-verse/air@latest
+RUN apk add --no-cache curl git \
+    && go install github.com/air-verse/air@latest
 
 WORKDIR /app
 
