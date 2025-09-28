@@ -3,6 +3,8 @@ package env
 import (
 	"log"
 	"os"
+	"strconv"
+	"unsafe"
 
 	"github.com/joho/godotenv"
 )
@@ -14,9 +16,13 @@ type AppConfig struct {
 }
 
 type DBConfig struct {
-	MongoUser string
-	MongoPass string
-	MongoURI  string
+	Host              string
+	Port              int
+	User              string
+	Password          string
+	DBName            string
+	MaxConnection     int
+	MaxIdleConnection int
 }
 
 type Env struct {
@@ -24,15 +30,84 @@ type Env struct {
 	Db  DBConfig
 }
 
-func getOrDefault(key, fallback string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
+var store = make(map[string]interface{})
 
-	return fallback
+func bitSizeOf[T ~string |
+	~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+	~float32 | ~float64]() int {
+
+	var zero T
+	switch any(zero).(type) {
+	case uint8, int8:
+		return 8
+	case uint16, int16:
+		return 16
+	case uint32, int32, float32:
+		return 32
+	case uint64, int64, float64:
+		return 64
+	case uint:
+		return int(unsafe.Sizeof(uint(0)) * 8)
+	case int:
+		return int(unsafe.Sizeof(int(0)) * 8)
+	default:
+		return 0
+	}
 }
 
-var store = make(map[string]interface{})
+func getOrDefault[T ~string |
+	~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+	~float32 | ~float64](key string, fallback string, opts ...int) T {
+
+	valueStr, exists := os.LookupEnv(key)
+	if !exists {
+		valueStr = fallback
+	}
+
+	var zero T
+	switch any(zero).(type) {
+	case string:
+		return *(*T)(unsafe.Pointer(&valueStr))
+
+	case uint8, uint16, uint32, uint64, uint:
+		bitSize := bitSizeOf[T]()
+		if len(opts) > 0 {
+			bitSize = opts[0]
+		}
+		v, err := strconv.ParseUint(valueStr, 10, bitSize)
+		if err != nil {
+			v, _ = strconv.ParseUint(fallback, 10, bitSize)
+		}
+		return T(v)
+
+	case int8, int16, int32, int64, int:
+		bitSize := bitSizeOf[T]()
+		if len(opts) > 0 {
+			bitSize = opts[0]
+		}
+		v, err := strconv.ParseInt(valueStr, 10, bitSize)
+		if err != nil {
+			v, _ = strconv.ParseInt(fallback, 10, bitSize)
+		}
+		return T(v)
+
+	case float32, float64:
+		bitSize := bitSizeOf[T]()
+		if len(opts) > 0 {
+			bitSize = opts[0]
+		}
+		v, err := strconv.ParseFloat(valueStr, bitSize)
+		if err != nil {
+			v, _ = strconv.ParseFloat(fallback, bitSize)
+		}
+		return *(*T)(unsafe.Pointer(&v))
+
+	default:
+		panic("unsupported type")
+	}
+}
 
 func init() {
 	if err := godotenv.Load(); err != nil {
@@ -40,15 +115,19 @@ func init() {
 	}
 
 	store["App"] = &AppConfig{
-		AppEnv:          getOrDefault("APP_ENV", "local"),
-		AppPort:         getOrDefault("APP_PORT", "3033"),
-		PrefixRequestId: getOrDefault("PREFIX_REQUEST_ID", "requestId"),
+		AppEnv:          getOrDefault[string]("APP_ENV", "local"),
+		AppPort:         getOrDefault[string]("APP_PORT", "3033"),
+		PrefixRequestId: getOrDefault[string]("PREFIX_REQUEST_ID", "requestId"),
 	}
 
 	store["Db"] = &DBConfig{
-		MongoUser: getOrDefault("MONGO_INIT_USER", "root"),
-		MongoPass: getOrDefault("MONGO_INIT_PASSWORD", "password"),
-		MongoURI:  getOrDefault("MONGO_URI", "mongodb://localhost:27017/?authSource=admin"),
+		Host:              getOrDefault[string]("DB_HOST", "localhost"),
+		Port:              getOrDefault[int]("DB_PORT", "5432"),
+		User:              getOrDefault[string]("DB_USER", "postgres"),
+		Password:          getOrDefault[string]("DB_PASSWORD", "postgres"),
+		DBName:            getOrDefault[string]("DB_NAME", "postgres"),
+		MaxConnection:     getOrDefault[int]("DB_MAX_CONNECTION", "10"),
+		MaxIdleConnection: getOrDefault[int]("DB_MAX_IDLE_CONNECTION", "10"),
 	}
 }
 

@@ -11,25 +11,31 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"github.com/nNottp33/ohara-api/internal/adapters/http/middleware"
+	middleware2 "github.com/nNottp33/ohara-api/internal/adapters/primary/http/middleware"
+	"github.com/nNottp33/ohara-api/internal/adapters/secondary/database"
 	"github.com/nNottp33/ohara-api/internal/config/env"
 )
 
 func main() {
-	app := fiber.New()
+	_, errDB := database.NewConnection()
+	if errDB != nil {
+		panic("Failed connecting to database")
+	}
+
 	appEnv := env.Get[env.AppConfig]("App")
+	app := fiber.New()
 	isProd := appEnv.AppEnv == "production"
 
 	app.Use(
 		requestid.New(
 			requestid.Config{
 				Header:    "X-Custom-Header",
-				Generator: middleware.GenerateRequestIdMiddleware,
+				Generator: middleware2.GenerateRequestIdMiddleware,
 			},
 		),
 	)
 
-	app.Use(middleware.LoggerMiddleware)
+	app.Use(middleware2.LoggerMiddleware)
 
 	origins := map[bool]string{
 		true:  "http://localhost:3033",
