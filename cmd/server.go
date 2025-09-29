@@ -11,7 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
-	middleware2 "github.com/nNottp33/ohara-api/internal/adapters/primary/http/middleware"
+	"github.com/nNottp33/ohara-api/internal/adapters/primary/http/middleware"
 	"github.com/nNottp33/ohara-api/internal/adapters/secondary/database"
 	"github.com/nNottp33/ohara-api/internal/config/env"
 )
@@ -30,12 +30,12 @@ func main() {
 		requestid.New(
 			requestid.Config{
 				Header:    "X-Custom-Header",
-				Generator: middleware2.GenerateRequestIdMiddleware,
+				Generator: middleware.GenerateRequestIdMiddleware,
 			},
 		),
 	)
 
-	app.Use(middleware2.LoggerMiddleware)
+	app.Use(middleware.LoggerMiddleware)
 
 	origins := map[bool]string{
 		true:  "http://localhost:3033",
