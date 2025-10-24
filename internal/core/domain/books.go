@@ -7,9 +7,9 @@ import (
 type Books struct {
 	BaseModel
 
-	Name        string    `json:"name" gorm:"type:varchar(255);not null;index"`
+	Title       string    `json:"title" gorm:"type:varchar(255);not null;index"`
 	Description string    `json:"description" gorm:"type:text"`
-	ImageUrl    string    `json:"image_url" gorm:"type:varchar(500)"` // เพิ่มขนาดสำหรับ URL
+	ImageUrl    string    `json:"image_url" gorm:"type:text;default:null"`
 	ISBN        string    `json:"isbn" gorm:"type:varchar(20);uniqueIndex"`
 	Price       uint64    `json:"price" gorm:"type:bigint;not null;index"`
 	ReleaseDate time.Time `json:"release_date" gorm:"type:date;not null;index"`
