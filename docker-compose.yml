@@ -9,14 +9,11 @@ services:
     env_file:
       - .env
     ports:
-      - '${APP_PORT}:${APP_PORT}'
+      - "${APP_PORT}:${APP_PORT}"
     networks:
       - ohara
     volumes:
       - .:/app
-
-volumes:
-  mongo_data:
 
 networks:
   ohara:
