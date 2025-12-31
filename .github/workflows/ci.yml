@@ -1,0 +1,97 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+  IMAGE_NAME: ohara-api
+  SSH_DIR: ohara-api
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker images to registry
+        run: |
+          docker build --no-cache -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -f Dockerfile .
+          docker tag ${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.DOCKER_REGISTRY }}:${{ github.sha }}
+          docker push ${{ env.DOCKER_REGISTRY }}:${{ github.sha }}
+
+      - name: Pull .env variables from Infisical
+        uses: Infisical/secrets-action@v1.0.7
+        with:
+          method: "universal"
+          client-id: ${{ secrets.INFISICAL_AUTH_CLIENT_ID }}
+          client-secret: ${{ secrets.INFISICAL_AUTH_CLIENT_SECRET }}
+          identity-id: ${{ secrets.INFISICAL_IDENTITY }}
+          domain: ${{ secrets.INFISICAL_SELF_HOST }}
+          env-slug: "dev"
+          project-slug: ${{ secrets.INFISICAL_PROJECT_SLUG }}
+          export-type: "file"
+
+      - name: Copy .env to server
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: ".env"
+          target: "~/${{ env.SSH_DIR }}/"
+
+      - name: Rename file
+        run: mv docker-compose.dev.yml docker-compose.yml
+
+      - name: Copy docker-compose file to server
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "docker-compose.yml"
+          target: "~/${{ env.SSH_DIR }}/"
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            cd ${{ env.SSH_DIR }} || exit 1
+
+            IMAGE_TAG=${{ github.sha }}
+            export DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
+            export IMAGE_TAG=$IMAGE_TAG
+
+            echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_USERNAME }}" --password-stdin
+
+            docker pull ${{ env.DOCKER_REGISTRY }}:$IMAGE_TAG
+
+            docker-compose down --remove-orphans
+
+            docker-compose --env-file .env up -d --remove-orphans
+
+            docker image prune -f
